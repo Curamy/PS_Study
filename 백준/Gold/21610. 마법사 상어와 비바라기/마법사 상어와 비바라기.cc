@@ -5,8 +5,8 @@ using namespace std;
 
 int N, M;
 int height[50][50];
+bool isCut[50][50];
 vector<pair<int, int>> position;
-vector<pair<int, int>> tmp;
 int dy[8] = {0, -1, -1, -1, 0, 1, 1, 1};
 int dx[8] = {-1, -1, 0, 1, 1, 1, 0, -1};
 
@@ -15,34 +15,19 @@ void move(int dir, int dist){
         int y = pos.first;
         int x = pos.second;
 
-        for (int d = 0; d < dist; d++){
-            y += dy[dir];
-            x += dx[dir];
-            
-            if (y < 0){
-                y = N - 1;
-            }
-            if (y == N){
-                y = 0;
-            }
-            if (x < 0){
-                x = N - 1;
-            }
-            if (x == N){
-                x = 0;
-            }
-        }
+        y = (y + dy[dir] * (dist % N) + N * 50) % N;
+        x = (x + dx[dir] * (dist % N) + N * 50) % N;
 
         pos.first = y;
         pos.second = x;
+
+        isCut[y][x] = true;
     }
 }
 
 void inject(){
     for (auto pos : position){
-        int y = pos.first;
-        int x = pos.second;
-        height[y][x]++;
+        height[pos.first][pos.second]++;
     }
 }
 
@@ -54,6 +39,7 @@ void grow(){
         int ddy[4] = {-1, 1, 1, -1};
         int ddx[4] = {1, 1, -1, -1};
         int num = 0;
+
         for (int i = 0; i < 4; i++){
             int ny = y + ddy[i];
             int nx = x + ddx[i];
@@ -72,30 +58,22 @@ void grow(){
 }
 
 void cut(){
-    for (auto pos : position){
-        tmp.push_back(pos);
-    }
-    position.clear();
+    vector<pair<int, int>> next_position;
 
     for (int i = 0; i < N; i++){
         for (int j = 0; j < N; j++){
-            if (height[i][j] >= 2){
-                bool isCut = true;
-                for (auto t : tmp){
-                    if (i == t.first && j == t.second){
-                        isCut = false;
-                        break;
-                    }
-                }
-                if (isCut){
-                    height[i][j] -= 2;
-                    position.push_back({i, j});
-                }
+            if (isCut[i][j]) {
+                isCut[i][j] = false;
+            }
+
+            else if (height[i][j] >= 2) {
+                height[i][j] -= 2;
+                next_position.push_back({i, j});
             }
         }
     }
 
-    tmp.clear();
+    position = next_position;
 }
 
 void debug(){
@@ -108,6 +86,10 @@ void debug(){
 }
 
 int main() {
+    cin.tie(NULL);
+    cout.tie(NULL);
+    ios_base::sync_with_stdio(false);
+
     cin >> N >> M;
     for (int i = 0; i < N; i++){
         for (int j = 0; j < N; j++){
